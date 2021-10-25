@@ -12,6 +12,7 @@ from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 from nltk.stem import WordNetLemmatizer
 import re
+from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline, FeatureUnion
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
@@ -85,7 +86,36 @@ def tokenize(text):
         clean_tokens.append(clean_token)
         
     return clean_tokens
+class Keywords(BaseEstimator, TransformerMixin):
 
+    def key_words(self, text):
+        """
+        INPUT: text - string, raw text data
+        OUTPUT: bool -bool object, True or False
+        """
+        # list of words that are commonly used during a disaster event
+        words = ['food','hunger','hungry','starving','water','drink','eat','thirsty',
+                 'need','shortage']
+
+        # lemmatize the buzzwords
+        lemmatized_words = [WordNetLemmatizer().lemmatize(w, pos='v') for w in words]
+        # Get the stem words of each word in lemmatized_words
+        words = [PorterStemmer().stem(w) for w in lemmatized_words]
+        count=0
+
+        # tokenize the input text
+        clean_tokens = tokenize(text)
+        for token in clean_tokens:
+            if token in words:
+                count=count+1
+        return count
+
+    def fit(self,X,y=None):
+        return self
+
+    def transform(self,X):
+        X_key_words = pd.Series(X).apply(self.key_words)
+        return pd.DataFrame(X_key_words)
 
 def build_model():
     """
@@ -104,7 +134,8 @@ def build_model():
             ('vect',CountVectorizer(tokenizer=tokenize)),
             ('tfid',TfidfTransformer())
             
-        ]))
+        ])),
+        ('countkeywords',Keywords())
         
     ])),
     ('kn',MultiOutputClassifier(KNeighborsClassifier(n_neighbors=10)))
@@ -122,13 +153,15 @@ def build_model():
 
 def evaluate_model(model, X_test, Y_test, category_names):
     y_pred=model.predict(X_test)
-    print(classification_report(Y_test.values, y_pred, target_names=category_names))
+    y_singletest=model.predict(["We're asking for water, medical supply, food"])[0]
+    print(y_singletest)
+    #print(classification_report(Y_test.values, y_pred, target_names=category_names))
     accuracy=(y_pred==Y_test.values).mean()
     print('The model accuracy score is {:.4f}'.format(accuracy))
 
 
 def save_model(model, model_filepath):
-    pickle.dump(model, open('model_filepath', 'wb'))
+    pickle.dump(model, open(model_filepath, 'wb'))
 
 
 def main():

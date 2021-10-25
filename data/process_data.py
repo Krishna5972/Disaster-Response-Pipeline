@@ -69,8 +69,11 @@ def save_data(df, database_filename):
     """
     engine = create_engine('sqlite:///'+database_filename)
     database_filename=str(database_filename)
-    tablename=database_filename.split('.')[0]
+    tablename=database_filename.split('/')[1]
+    tablename=tablename.split('.')[0]
+    print("The name of the table:"+" "+tablename)
     df.to_sql(tablename, engine, index=False , if_exists='replace')
+    df.to_csv('Disasterresponse.csv')
     
 
 

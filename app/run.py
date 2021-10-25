@@ -9,29 +9,91 @@ from nltk.tokenize import word_tokenize
 from flask import Flask
 from flask import render_template, request, jsonify
 from plotly.graph_objs import Bar
-from sklearn.externals import joblib
+import joblib
 from sqlalchemy import create_engine
-
+from nltk.stem import PorterStemmer
+from nltk.corpus import stopwords
+from sklearn.base import BaseEstimator, TransformerMixin
+import re
 
 app = Flask(__name__)
+class Keywords(BaseEstimator, TransformerMixin):
+
+    def key_words(self, text):
+        """
+        INPUT: text - string, raw text data
+        OUTPUT: bool -bool object, True or False
+        """
+        # list of words that are commonly used during a disaster event
+        words = ['food','hunger','hungry','starving','water','drink','eat','thirsty',
+                 'need','shortage']
+
+        # lemmatize the buzzwords
+        lemmatized_words = [WordNetLemmatizer().lemmatize(w, pos='v') for w in words]
+        # Get the stem words of each word in lemmatized_words
+        words = [PorterStemmer().stem(w) for w in lemmatized_words]
+        count=0
+
+        # tokenize the input text
+        clean_tokens = tokenize(text)
+        for token in clean_tokens:
+            if token in words:
+                count=count+1
+        return count
+
+    def fit(self,X,y=None):
+        return self
+
+    def transform(self,X):
+        X_key_words = pd.Series(X).apply(self.key_words)
+        return pd.DataFrame(X_key_words)
 
 def tokenize(text):
+    """
+    Replaces the URL's in the text with a custom word 'urlplaceholder'.Tokenize the text,then Normalize,Lemmatize and Stem the tokens.
+
+    Args:
+    text: messages from the message data set
+
+    Return: 
+    clean_tokens:clean tokens after stemming
+
+    """
+    #Replacing URL's with urlplaceholder
+    url_regex = 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
+    detected_urls = re.findall(url_regex,text)
+    for url in detected_urls:
+        text = text.replace(url,"urlplaceholder")
+    
+    # Excluding everything except letters and numbers
+    text = re.sub(r"[^a-zA-Z0-9]"," ",text)
+    
+    text=text.lower()
+    # tokenize the text
     tokens = word_tokenize(text)
+    
+    # remove stop words
+    tokens = [token for token in tokens if token not in stopwords.words("english")]
+    
+    # lemmatization
     lemmatizer = WordNetLemmatizer()
-
+    stemmer=PorterStemmer()
+    tokens=[lemmatizer.lemmatize(token).strip() for token in tokens]
+    
     clean_tokens = []
-    for tok in tokens:
-        clean_tok = lemmatizer.lemmatize(tok).lower().strip()
-        clean_tokens.append(clean_tok)
-
+    for token in tokens:
+        clean_token = stemmer.stem(token)
+        clean_tokens.append(clean_token)
+        
     return clean_tokens
 
 # load data
-engine = create_engine('sqlite:///../data/YourDatabaseName.db')
-df = pd.read_sql_table('YourTableName', engine)
+engine = create_engine('sqlite:///../data/DisasterResponse.db')
+
+df = pd.read_sql_table('DisasterResponse', engine)
 
 # load model
-model = joblib.load("../models/your_model_name.pkl")
+model = joblib.load("../models/classifier.pkl")
 
 
 # index webpage displays cool visuals and receives user input text for model
@@ -43,7 +105,33 @@ def index():
     # TODO: Below is an example - modify to extract data for your own visuals
     genre_counts = df.groupby('genre').count()['message']
     genre_names = list(genre_counts.index)
+
+    #request vs offer
+    request_offer_df=df[['request','offer']]
+    request_offer_df=request_offer_df.apply(pd.to_numeric, errors='ignore')
+    request_count=request_offer_df['request'].value_counts()[1]
+    offer_count=request_offer_df['offer'].value_counts()[1]
+    print(request_count)
+    print(offer_count)
+
     
+    request_offer_counts=[request_count,offer_count]
+    request_offer_names=['Request','Offer']
+
+    #relateed v unrelated
+    related_df=df[['related']]
+    related_df=related_df.apply(pd.to_numeric, errors='ignore')
+    related_counts=related_df['related'].value_counts()[1]
+    unrelated_counts=related_df['related'].value_counts()[0]
+    related_counts_list=[related_counts,unrelated_counts]
+    related_names=['related','not related']
+
+
+
+
+
+
+
     # create visuals
     # TODO: Below is an example - modify to create your own visuals
     graphs = [
@@ -56,16 +144,66 @@ def index():
             ],
 
             'layout': {
+                'color':'red',
                 'title': 'Distribution of Message Genres',
                 'yaxis': {
                     'title': "Count"
                 },
                 'xaxis': {
                     'title': "Genre"
+                },
+                
+            }
+        },
+
+        {
+            'data': [
+                Bar(
+                    x=related_names,
+                    y=related_counts_list,
+
+                )
+            ],
+
+            'layout': {
+                'title': 'Distribution of Message Types',
+                'yaxis': {
+                    'title': "Count"
+                },
+                'xaxis': {
+                    'title': "Message Type"
                 }
             }
+        },
+        {
+            'data': [
+                Bar(
+                    x=request_offer_names,
+                    y=request_offer_counts,
+
+                )
+            ],
+
+            'layout': {
+                'title': 'Distribution of Related and Unrelated messages',
+                'yaxis': {
+                    'title': "Count"
+                },
+                'xaxis': {
+                    'title': "Message Type"
+                }
+            }
+
+
         }
     ]
+
+        
+
+
+
+
+    
     
     # encode plotly graphs in JSON
     ids = ["graph-{}".format(i) for i, _ in enumerate(graphs)]
