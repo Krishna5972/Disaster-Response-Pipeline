@@ -16,22 +16,24 @@ from nltk.corpus import stopwords
 from sklearn.base import BaseEstimator, TransformerMixin
 import re
 
-app = Flask(__name__)
+app = Flask(__name__) #creating flask
+
 class Keywords(BaseEstimator, TransformerMixin):
 
     def key_words(self, text):
         """
         INPUT: text - string, raw text data
-        OUTPUT: bool -bool object, True or False
+        OUTPUT: count of words present in the text
         """
-        # list of words that are commonly used during a disaster event
+        # list of words 
         words = ['food','hunger','hungry','starving','water','drink','eat','thirsty',
                  'need','shortage']
-
-        # lemmatize the buzzwords
-        lemmatized_words = [WordNetLemmatizer().lemmatize(w, pos='v') for w in words]
-        # Get the stem words of each word in lemmatized_words
-        words = [PorterStemmer().stem(w) for w in lemmatized_words]
+        lemmatizer = WordNetLemmatizer()
+        stemmer=PorterStemmer()
+        # lemmatize the words
+        lemmatized_words = [lemmatizer.lemmatize(w).strip() for w in words]
+        # stem the words
+        words = [stemmer.stem(w) for w in lemmatized_words]
         count=0
 
         # tokenize the input text
@@ -136,6 +138,7 @@ def index():
     # TODO: Below is an example - modify to create your own visuals
     graphs = [
         {
+            #graph 1
             'data': [
                 Bar(
                     x=genre_names,
@@ -155,7 +158,7 @@ def index():
                 
             }
         },
-
+        #graph 2
         {
             'data': [
                 Bar(
@@ -175,6 +178,7 @@ def index():
                 }
             }
         },
+        #graph 3
         {
             'data': [
                 Bar(
@@ -197,14 +201,6 @@ def index():
 
         }
     ]
-
-        
-
-
-
-
-    
-    
     # encode plotly graphs in JSON
     ids = ["graph-{}".format(i) for i, _ in enumerate(graphs)]
     graphJSON = json.dumps(graphs, cls=plotly.utils.PlotlyJSONEncoder)
