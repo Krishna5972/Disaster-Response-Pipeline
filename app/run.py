@@ -22,8 +22,10 @@ class Keywords(BaseEstimator, TransformerMixin):
 
     def key_words(self, text):
         """
-        INPUT: text - string, raw text data
-        OUTPUT: count of words present in the text
+        Args:
+         text -  text data
+        Returns:
+        count of common words during a disaster
         """
         # list of words 
         words = ['food','hunger','hungry','starving','water','drink','eat','thirsty',
