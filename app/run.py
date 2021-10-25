@@ -16,7 +16,7 @@ from nltk.corpus import stopwords
 from sklearn.base import BaseEstimator, TransformerMixin
 import re
 
-app = Flask(__name__) #creating flask
+app = Flask(__name__) 
 
 class Keywords(BaseEstimator, TransformerMixin):
 

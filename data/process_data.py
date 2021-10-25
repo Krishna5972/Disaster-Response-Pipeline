@@ -4,13 +4,10 @@ from sqlalchemy import create_engine
 
 def load_data(messages_filepath, categories_filepath):
     """
-    Load the two data sets and to merge them into a Dataframe
-
     Args:
-    messages_filepath: path of the messages dataset
-    categories_filepath : path of the categories dataset
-
-    Returns:merged df
+    text -  text data
+    Returns:
+    count of common words during a disaster
     """
     messages = pd.read_csv(messages_filepath)
     categories = pd.read_csv(categories_filepath)
@@ -73,7 +70,7 @@ def save_data(df, database_filename):
     tablename=tablename.split('.')[0]
     print("The name of the table:"+" "+tablename)
     df.to_sql(tablename, engine, index=False , if_exists='replace')
-    df.to_csv('Disasterresponse.csv')
+    #df.to_csv('Disasterresponse.csv')
     
 
 
