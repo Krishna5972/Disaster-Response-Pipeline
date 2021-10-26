@@ -64,6 +64,9 @@ There are 3 main components in this project.
 - Use the model to predict the queries using GET method 
 - Return the classifications to be rendered on html page
 
+![Example](img/example.PNG)
+
+
 ## File Description <a name="File-Descriptions"></a>
 This is the high level description of all the files in this project.
 ```
