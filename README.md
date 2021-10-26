@@ -113,18 +113,27 @@ This is the high level description of all the files in this project.
 
 
 ### Instructions:<a name="Instructions"></a>
-1. Run the following commands in the project's root directory to set up your database and model.
+
+1. Download the files or clone this repository
+
+        `git clone https://github.com/Krishna5972/Disaster-Response-Pipeline.git`
+
+2. Run the following commands in the project's root directory to set up your database and model.
 
     - To run ETL pipeline that cleans data and stores in database
+    
         `python data/process_data.py data/disaster_messages.csv data/disaster_categories.csv data/DisasterResponse.db`
     - To run ML pipeline that trains classifier and saves
+    
         `python models/train_classifier.py data/DisasterResponse.db models/classifier.pkl`
 
-2. Navigate to app's directory and run the following command.
+3. Navigate to app's directory and run the following command.
+
     `cd app`
+    
     `python run.py`
 
-3. Go to http://localhost:5555/
+4. Go to http://localhost:5555/
 
 ## Result <a name="Result"></a>
 Click [here](https://dsnd-message-classification.herokuapp.com//) open this project on Heroku
