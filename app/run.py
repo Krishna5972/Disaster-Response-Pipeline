@@ -171,7 +171,7 @@ def index():
             ],
 
             'layout': {
-                'title': 'Distribution of Message Types',
+                'title': 'Distribution of Related and Unrelated messages',
                 'yaxis': {
                     'title': "Count"
                 },
@@ -191,7 +191,7 @@ def index():
             ],
 
             'layout': {
-                'title': 'Distribution of Related and Unrelated messages',
+                'title': 'Request vs Offer Messages',
                 'yaxis': {
                     'title': "Count"
                 },
